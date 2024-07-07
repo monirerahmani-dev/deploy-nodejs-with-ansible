@@ -1,45 +1,47 @@
 ---
-- name: Install node and npm 
+- name: Instal node and npm 
   hosts: node
   tasks:
     - name: Update apt repo and cache
       apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
     - name: Install nodejs and npm
-      apt: 
-        pkg: 
+      apt:
+        pkg:
           - nodejs
           - npm
 
 - name: Create new linux user for node app
-  host: node
+  hosts: node
   tasks:
-    - name: Crete linux user
-      user:
+    - name: Create linux use
+      user: 
         name: node
-        comment: node admin
+        comment: Admin
         group: admin
 
-
-        
 - name: Deploy nodejs app
   hosts: node
   become: True
   become_user: node
+  vars_files:
+    - project-vars
   tasks:
-    - name: unarchive nodejs folder to a server
+   - name: Copy and Unpack the nodejs file
       unarchive:
-        src: /home/monire/bootcamp/ansible/node/nodejs-app
-        dest: /home/node
+        src: "{{location}}/nodejs-app-{{version}}.tgz"
+        dest: "{{destination}}"
     - name: Install dependencies
       npm:
-        path: /home/node/package
-    - name: start the application
+        path: "{{destination}}/package"
+        # path: /root/package
+    - name: Start the apllication
       command:
-        chdir: /home/node/package/app
+        chdir: "{{destination}}/package/app
+        # chdir: /root/package/app
         cmd: node server
       async: 1000
       poll: 0
-    - name: Insure app is running
+    - name: Ensure app is running
       shell: ps aux | grep node
       register: app_status
     - debug: msg={{app_status.stdout_lines}}
